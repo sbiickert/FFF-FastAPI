@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi.responses import RedirectResponse
 
 import api.schemas as fff_schema
 
@@ -11,11 +12,12 @@ router = APIRouter()
  
 @router.get("/")
 async def get_root():
-	pass
+	return RedirectResponse('/docs')
+	#return {"message": "Welcome to the FFF version 6"}
 
 @router.get("heartbeat")
 async def get_heartbeat():
-	pass
+	return {"message": "Welcome to the FFF version 6"}
 
 @router.get("/transactiontypes/{category}", response_model=list[fff_schema.TransactionType])
 def get_transaction_types(category: fff_schema.TransactionTypeCategory):

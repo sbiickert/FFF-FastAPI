@@ -2,7 +2,6 @@ from fastapi import APIRouter, status, Query, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from uuid import UUID
-from api.models import Transaction
 
 import api.schemas as fff_schema
 import api.cruds.transactions as fff_crud
@@ -24,34 +23,49 @@ router = APIRouter()
 
 @router.get("/transaction/{id}", response_model=fff_schema.TransactionOut)
 async def get_transaction(id: int, db: AsyncSession = Depends(get_db)):
-	t = await fff_crud.get_transaction_with_id(db, id)
+	t = await fff_crud.get_transaction(id, db)
 	if t is None:
 		raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{id} is not a valid transaction id")
 	return t
 
 @router.post("/transaction", response_model=fff_schema.TransactionOut, status_code=status.HTTP_201_CREATED)
 async def post_transaction(t_item: fff_schema.TransactionIn, db: AsyncSession = Depends(get_db)):
-	return await fff_crud.create_transaction(db, t_item)
+	return await fff_crud.create_transaction(t_item, db)
 
 @router.put("/transaction/{id}", response_model=fff_schema.TransactionOut)
-def put_transaction(id: int, t_item: fff_schema.TransactionIn):
-	return fff_schema.TransactionOut(id=id, **t_item.dict())
+async def put_transaction(id: int, t_item: fff_schema.TransactionIn, db: AsyncSession = Depends(get_db)):
+	t = await fff_crud.get_transaction(id, db)
+	if t is None:
+		raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{id} is not a valid transaction id")
+	return await fff_crud.update_transaction(original=t, updated_t=t_item, db=db)
 
 @router.delete("/transaction/{id}", response_model=fff_schema.TransactionsMessage)
-def delete_transaction(id: int):
+async def delete_transaction(id: int, db: AsyncSession = Depends(get_db)):
+	t = await fff_crud.get_transaction(id, db)
+	if t is None:
+		raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{id} is not a valid transaction id")
+	await fff_crud.delete_transaction(original=t, db=db)
 	return fff_schema.TransactionsMessage(message="Deleted transaction", tids=[id])
 
-@router.get("/transactions/{year}/{month}/{day}", response_model=list[fff_schema.TransactionOut])
-def get_transactions_for_day(year: int, month: int, day: int):
-	pass
+
 
 @router.get("/transactions", response_model=list[fff_schema.TransactionOut])
-def get_transactions_with_ids(tids: str):
-	pass
+async def get_transactions_with_ids(tids: str = Query(default="", regex="^[,\d]+$"),
+									db: AsyncSession = Depends(get_db)):
+	id_list = list(map(int, tids.split(",")))
+	return await fff_crud.get_transactions(ids=id_list, db=db)
 
 @router.get("/transactions/series/{series}", response_model=list[fff_schema.TransactionOut])
-def get_transactions_in_series(series: UUID):
+async def get_transactions_in_series(series: UUID, db: AsyncSession = Depends(get_db)):
+	return await fff_crud.get_transactions_in_series(series, db)
+
+@router.get("/transactions/{year}/{month}/{day}", response_model=list[fff_schema.TransactionOut])
+def get_transactions_for_day(year: int, month: int, day: int = -1,
+							tt: int = -1,
+							c: fff_schema.TransactionTypeCategory = fff_schema.TransactionTypeCategory.all):
 	pass
+
+
 
 @router.post("/transactions", response_model=list[fff_schema.TransactionOut], status_code=status.HTTP_201_CREATED)
 def post_transactions():
