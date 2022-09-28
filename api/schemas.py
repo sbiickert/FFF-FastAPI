@@ -49,9 +49,9 @@ class TransactionType(BaseModel):
 
 class TransactionBase(BaseModel):
 	amount: float
-	description: str
+	description: str | None
 	transaction_date: datetime.date
-	series: UUID
+	series: UUID | None
 
 class TransactionIn(TransactionBase):
 	user_id: int
@@ -64,6 +64,8 @@ class Transaction(TransactionBase):
 
 class TransactionOut(TransactionIn):
 	id: int
+	class Config:
+		orm_mode = True
 
 class TransactionsMessage(BaseModel):
 	message: str

@@ -1,7 +1,12 @@
-from fastapi import APIRouter, status, Query
+from fastapi import APIRouter, status, Query, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from uuid import UUID
+from api.models import Transaction
 
 import api.schemas as fff_schema
+import api.cruds.transactions as fff_crud
+from api.db import get_db
 
 router = APIRouter()
 
@@ -17,13 +22,16 @@ router = APIRouter()
 # put_transactions             PUT        ANY      ANY    /transactions                            
 # delete_transactions          DELETE     ANY      ANY    /transactions                            
 
-@router.get("/transaction/{id}", response_model=fff_schema.Transaction)
-def get_transaction(id: int):
-	pass
+@router.get("/transaction/{id}", response_model=fff_schema.TransactionOut)
+async def get_transaction(id: int, db: AsyncSession = Depends(get_db)):
+	t = await fff_crud.get_transaction_with_id(db, id)
+	if t is None:
+		raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{id} is not a valid transaction id")
+	return t
 
 @router.post("/transaction", response_model=fff_schema.TransactionOut, status_code=status.HTTP_201_CREATED)
-def post_transaction(t_item: fff_schema.TransactionIn):
-	return fff_schema.TransactionOut(id=1, **t_item.dict())
+async def post_transaction(t_item: fff_schema.TransactionIn, db: AsyncSession = Depends(get_db)):
+	return await fff_crud.create_transaction(db, t_item)
 
 @router.put("/transaction/{id}", response_model=fff_schema.TransactionOut)
 def put_transaction(id: int, t_item: fff_schema.TransactionIn):
