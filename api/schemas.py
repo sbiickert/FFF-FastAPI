@@ -57,6 +57,9 @@ class TransactionIn(TransactionBase):
 	user_id: int
 	transaction_type_id: int
 
+class TransactionInWithID(TransactionIn):
+	id: int
+	
 class Transaction(TransactionBase):
 	id: int
 	transaction_type: TransactionType

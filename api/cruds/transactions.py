@@ -11,6 +11,13 @@ import api.schemas as fff_schema
 
 # Get Operations
 
+#  d888b  d88888b d888888b 
+# 88' Y8b 88'     `~~88~~' 
+# 88      88ooooo    88    
+# 88  ooo 88~~~~~    88    
+# 88. ~8~ 88.        88    
+#  Y888P  Y88888P    YP            
+
 async def get_transaction(id: int, db: AsyncSession) -> Optional[fff_model.Transaction]:
 	result: Result = await db.execute(
 		select(fff_model.Transaction).filter(fff_model.Transaction.id == id)
@@ -63,8 +70,18 @@ async def get_transactions_for_month(year: int, month: int, c: fff_schema.Transa
 	transactions = list(map(lambda x: x[0], result.fetchall()))
 	return transactions
 
+
+
 # Single Transaction Edit Operations
 
+# d88888b d8888b. d888888b d888888b 
+# 88'     88  `8D   `88'   `~~88~~' 
+# 88ooooo 88   88    88       88    
+# 88~~~~~ 88   88    88       88    
+# 88.     88  .8D   .88.      88    
+# Y88888P Y8888D' Y888888P    YP    
+                                  
+                                  
 async def create_transaction(t: fff_schema.TransactionIn, db: AsyncSession) -> fff_model.Transaction:
 	transaction = fff_model.Transaction(**t.dict())
 	db.add(transaction)
@@ -73,8 +90,8 @@ async def create_transaction(t: fff_schema.TransactionIn, db: AsyncSession) -> f
 	return transaction
 
 async def update_transaction(original: fff_model.Transaction, 
-	updated_t: fff_schema.TransactionIn,
-	db: AsyncSession) -> fff_model.Transaction:
+							updated_t: fff_schema.TransactionIn,
+							db: AsyncSession) -> fff_model.Transaction:
 	original.amount = updated_t.amount
 	original.description = updated_t.description
 	original.series = updated_t.series
@@ -90,3 +107,42 @@ async def delete_transaction(original: fff_model.Transaction, db: AsyncSession) 
 	await db.commit()
 
 # Multiple Transaction Edit Operations
+
+# .88b  d88. db    db db      d888888b d888888b        d88888b d8888b. d888888b d888888b 
+# 88'YbdP`88 88    88 88      `~~88~~'   `88'          88'     88  `8D   `88'   `~~88~~' 
+# 88  88  88 88    88 88         88       88           88ooooo 88   88    88       88    
+# 88  88  88 88    88 88         88       88    C8888D 88~~~~~ 88   88    88       88    
+# 88  88  88 88b  d88 88booo.    88      .88.          88.     88  .8D   .88.      88    
+# YP  YP  YP ~Y8888P' Y88888P    YP    Y888888P        Y88888P Y8888D' Y888888P    YP    
+
+async def create_transactions(t_list: list[fff_schema.TransactionIn], db: AsyncSession) -> List[fff_model.Transaction]:
+	transactions = list(map(lambda t: fff_model.Transaction(**t.dict()), t_list))
+	db.add_all(transactions)
+	await db.commit()
+	for transaction in transactions:
+		await db.refresh (transaction)
+	return transactions
+
+async def update_transactions(originals: list[fff_model.Transaction],
+							 updated: list[fff_schema.TransactionInWithID],
+							 db: AsyncSession) -> List[fff_model.Transaction]:
+	for original, updated_t in zip(originals, updated):
+		original.amount = updated_t.amount
+		original.description = updated_t.description
+		original.series = updated_t.series
+		original.transaction_date = updated_t.transaction_date
+		original.transaction_type_id = updated_t.transaction_type_id
+		db.add(original)
+	await db.commit()
+	for original in originals:
+		await db.refresh(original)
+	return originals
+
+
+async def delete_transactions(originals: list[fff_model.Transaction], db: AsyncSession) -> list[int]:
+	t_ids = []
+	for original in originals:
+		t_ids.append(original.id)
+		await db.delete(original)
+	await db.commit()
+	return t_ids
