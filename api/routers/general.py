@@ -1,7 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 import api.schemas as fff_schema
+import api.cruds.other as fff_crud
+from api.db import get_db
 
 router = APIRouter()
 
@@ -19,7 +22,14 @@ async def get_root():
 async def get_heartbeat():
 	return {"message": "Welcome to the FFF version 6"}
 
+@router.get("/transactiontype/{id}", response_model=fff_schema.TransactionType)
+async def get_transaction_type(id: int, db: AsyncSession = Depends(get_db)):
+	tt = await fff_crud.get_transaction_type(id, db)
+	if tt is None:
+		raise HTTPException(status.HTTP_404_NOT_FOUND, "No such transaction type.")
+	return tt
+
 @router.get("/transactiontypes/{category}", response_model=list[fff_schema.TransactionType])
-def get_transaction_types(category: fff_schema.TransactionTypeCategory):
-	return [fff_schema.TransactionType(id=1, name="Test", is_active=True, category=fff_schema.TransactionTypeCategory.expense, symbol="😇")]
+async def get_transaction_types(category: fff_schema.TransactionTypeCategory, db: AsyncSession = Depends(get_db)):
+	return await fff_crud.get_transaction_types(category, db)
 

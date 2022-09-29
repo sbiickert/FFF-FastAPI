@@ -1,4 +1,3 @@
-from unittest import result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.engine import Result

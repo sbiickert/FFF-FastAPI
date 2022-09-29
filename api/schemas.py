@@ -43,6 +43,8 @@ class TransactionType(BaseModel):
 	is_active: bool = Field(True, description="Is this transaction type valid for new transactions")
 	category: TransactionTypeCategory = Field(TransactionTypeCategory.expense)
 	symbol: str
+	class Config:
+		orm_mode = True
 
 
 # TRANSACTION 
