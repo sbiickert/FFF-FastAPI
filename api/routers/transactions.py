@@ -1,4 +1,5 @@
-from fastapi import APIRouter, status, Query, Depends, HTTPException
+from email.policy import default
+from fastapi import APIRouter, status, Query, Depends, HTTPException, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from uuid import UUID
@@ -60,10 +61,17 @@ async def get_transactions_in_series(series: UUID, db: AsyncSession = Depends(ge
 	return await fff_crud.get_transactions_in_series(series, db)
 
 @router.get("/transactions/{year}/{month}/{day}", response_model=list[fff_schema.TransactionOut])
-def get_transactions_for_day(year: int, month: int, day: int = -1,
-							tt: int = -1,
-							c: fff_schema.TransactionTypeCategory = fff_schema.TransactionTypeCategory.all):
-	pass
+async def get_transactions_for(year: int = Path(ge=2000, le=2070),
+								month: int = Path(ge=1, le=12), 
+								day: int = Path(le=31, default=-1),
+								tt: int = -1,
+								c: fff_schema.TransactionTypeCategory = fff_schema.TransactionTypeCategory.all,
+								db: AsyncSession = Depends(get_db)):
+	if day < 1:
+		# Between the first and last of the month
+		return await fff_crud.get_transactions_for_month(year, month, c, tt, db)
+	# else on a specific day
+	return await fff_crud.get_transactions_for_date(year, month, day, c, tt, db)
 
 
 

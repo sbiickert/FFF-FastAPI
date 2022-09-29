@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.engine import Result
 from typing import List, Tuple, Optional
-import datetime
+from datetime import date
+import calendar
 
 import api.models as fff_model
 import api.schemas as fff_schema
@@ -31,11 +32,36 @@ async def get_transactions_in_series(series: str, db: AsyncSession) -> List[fff_
 	transactions = list(map(lambda x: x[0], result.fetchall()))
 	return transactions
 
-async def get_transactions_for_date(year: int, month: int, day: int | None, c: str, tt: int,
+async def get_transactions_for_date(year: int, month: int, day: int, c: fff_schema.TransactionTypeCategory, tt: int,
 		db: AsyncSession) -> List[fff_model.Transaction]:
+	month_range = calendar.monthrange(year, month)
+	q_date = date(year, month, min(day, month_range[1]))
+	clauses = [fff_model.Transaction.transaction_date == q_date]
+	if c != fff_schema.TransactionTypeCategory.all:
+		clauses.append(fff_model.TransactionType.category == c)
+	if tt != -1:
+		clauses.append(fff_model.Transaction.transaction_type_id == tt)
 	result: Result = await db.execute(
-		select(fff_model.Transaction).filter(fff_model.Transaction.transaction_date.l)
+		select(fff_model.Transaction).join(fff_model.TransactionType).filter(*clauses)
 	)
+	transactions = list(map(lambda x: x[0], result.fetchall()))
+	return transactions
+
+async def get_transactions_for_month(year: int, month: int, c: fff_schema.TransactionTypeCategory, tt: int,
+		db: AsyncSession) -> List[fff_model.Transaction]:
+	month_range = calendar.monthrange(year, month)
+	first_of_month = date(year, month, 1)
+	last_of_month = date(year, month, month_range[1])
+	clauses = [fff_model.Transaction.transaction_date >= first_of_month, fff_model.Transaction.transaction_date <= last_of_month]
+	if c != fff_schema.TransactionTypeCategory.all:
+		clauses.append(fff_model.TransactionType.category == c)
+	if tt != -1:
+		clauses.append(fff_model.Transaction.transaction_type_id == tt)
+	result: Result = await db.execute(
+		select(fff_model.Transaction).join(fff_model.TransactionType).filter(*clauses)
+	)
+	transactions = list(map(lambda x: x[0], result.fetchall()))
+	return transactions
 
 # Single Transaction Edit Operations
 
