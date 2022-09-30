@@ -1,4 +1,3 @@
-from email.policy import default
 from fastapi import APIRouter, status, Query, Depends, HTTPException, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 

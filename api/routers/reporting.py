@@ -1,6 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, status, Query, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+import re
 
 import api.schemas as fff_schema
+import api.cruds.other as fff_crud
+from api.db import get_db
 
 router = APIRouter()
 
@@ -10,13 +14,14 @@ router = APIRouter()
 # summary                      GET|HEAD   ANY      ANY    /summary/{y}/{m}/{_format}               
 
 @router.get("/search", response_model=list[fff_schema.TransactionOut])
-def get_search(q: str):
-	pass
+async def get_search(q: str, db: AsyncSession = Depends(get_db)):
+	clean_q = re.sub("[^\w %]", "", q)
+	return await fff_crud.search_transactions(f"%{clean_q}%", db)
 
 @router.get("/balance/{year}/{month}/{day}")
-def get_balance(year: int, month: int = -1, day: int = -1):
+async def get_balance(year: int, month: int = -1, day: int = -1):
 	pass
 
 @router.get("/summary/{year}/{month}")
-def get_summary(year: int, month: int = -1):
+async def get_summary(year: int, month: int = -1):
 	pass
