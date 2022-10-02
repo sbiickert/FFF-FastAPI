@@ -50,13 +50,6 @@ async def get_user(user_email: str, db: AsyncSession) -> fff_model.User | None:
 	t: Optional[Tuple[fff_model.User]] = result.fetchone()
 	return t[0] if t is not None else None
 
-async def get_user_for_token(token: str, db: AsyncSession) -> fff_model.User | None:
-	result: Result = await db.execute(
-		select(fff_model.User).filter(fff_model.User.email == token) # Totally insecure, work in progress
-	)
-	t: Optional[Tuple[fff_model.User]] = result.fetchone()
-	return t[0] if t is not None else None
-
 
 # .d8888. d88888b  .d8b.  d8888b.  .o88b. db   db 
 # 88'  YP 88'     d8' `8b 88  `8D d8P  Y8 88   88 

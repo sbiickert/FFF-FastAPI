@@ -29,7 +29,7 @@ class User(Base):
 	id = Column(Integer, primary_key=True)
 	user_group_id = Column(Integer, ForeignKey("user_group.id"))
 	email = Column(String(180))
-	roles = Column(JSON)
+	roles = Column(String(255))
 	password = Column(String(255))
 	short_name = Column(String(255))
 	full_name = Column(String(255))

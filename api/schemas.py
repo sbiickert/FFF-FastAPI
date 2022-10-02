@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr, Json
+from pydantic import BaseModel, Field, EmailStr
 from enum import Enum
 from uuid import UUID
 import datetime
@@ -7,13 +7,15 @@ import datetime
 
 class UserBase(BaseModel):
 	email: EmailStr
-	roles: Json
+	roles: str
 	user_group_id: int
 	short_name: str
 	full_name: str
 
 class UserOut(UserBase):
 	id: int
+	class Config:
+		orm_mode = True
 
 class User(UserBase):
 	id: int
@@ -29,6 +31,15 @@ class UserGroup(BaseModel):
 	name: str
 	users: list[User]
 
+
+# TOKEN
+
+class Token(BaseModel):
+	access_token: str
+	token_type: str
+
+class TokenData(BaseModel):
+	username: str | None = None
 
 # TRANSACTION TYPE
 
