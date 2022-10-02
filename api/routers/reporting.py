@@ -1,10 +1,11 @@
-from fastapi import APIRouter, status, Query, Depends, HTTPException
+from fastapi import APIRouter, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 import re
 
 import api.schemas as fff_schema
 import api.cruds.other as fff_crud
 from api.db import get_db
+from api.security import oauth2_scheme
 
 router = APIRouter()
 
@@ -14,7 +15,7 @@ router = APIRouter()
 # summary                      GET|HEAD   ANY      ANY    /summary/{y}/{m}/{_format}               
 
 @router.get("/search", response_model=list[fff_schema.TransactionOut])
-async def get_search(q: str, db: AsyncSession = Depends(get_db)):
+async def get_search(q: str, db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme)):
 	clean_q = re.sub("[^\w %]", "", q)
 	return await fff_crud.search_transactions(f"%{clean_q}%", db)
 

@@ -1,3 +1,4 @@
+from unittest import result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.engine import Result
@@ -34,6 +35,27 @@ async def get_transaction_types(category: fff_schema.TransactionTypeCategory, db
 	)
 	tt_list = list(map(lambda x: x[0], result.fetchall()))
 	return tt_list
+
+# db    db .d8888. d88888b d8888b. 
+# 88    88 88'  YP 88'     88  `8D 
+# 88    88 `8bo.   88ooooo 88oobY' 
+# 88    88   `Y8b. 88~~~~~ 88`8b   
+# 88b  d88 db   8D 88.     88 `88. 
+# ~Y8888P' `8888Y' Y88888P 88   YD 
+                                 
+async def get_user(user_email: str, db: AsyncSession) -> fff_model.User | None:
+	result: Result = await db.execute(
+		select(fff_model.User).filter(fff_model.User.email == user_email)
+	)
+	t: Optional[Tuple[fff_model.User]] = result.fetchone()
+	return t[0] if t is not None else None
+
+async def get_user_for_token(token: str, db: AsyncSession) -> fff_model.User | None:
+	result: Result = await db.execute(
+		select(fff_model.User).filter(fff_model.User.email == token) # Totally insecure, work in progress
+	)
+	t: Optional[Tuple[fff_model.User]] = result.fetchone()
+	return t[0] if t is not None else None
 
 
 # .d8888. d88888b  .d8b.  d8888b.  .o88b. db   db 
