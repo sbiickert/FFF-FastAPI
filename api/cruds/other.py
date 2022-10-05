@@ -50,6 +50,24 @@ async def get_user(user_email: str, db: AsyncSession) -> fff_model.User | None:
 	t: Optional[Tuple[fff_model.User]] = result.fetchone()
 	return t[0] if t is not None else None
 
+async def get_user_group(user_group_id: int, db: AsyncSession) -> fff_model.UserGroup | None:
+	result: Result = await db.execute(
+		select(fff_model.UserGroup).filter(fff_model.UserGroup.id == user_group_id)
+	)
+	t: Optional[Tuple[fff_model.UserGroup]] = result.fetchone()
+	return t[0] if t is not None else None
+
+async def get_users_in_group(user_group: fff_schema.UserGroup, db: AsyncSession) -> list[fff_model.User]:
+	result: Result = await db.execute(
+		select(fff_model.User).filter(fff_model.User.user_group_id == user_group.id)
+	)
+	u_list = list(map(lambda x: x[0], result.fetchall()))
+	return u_list
+
+async def get_user_ids_in_group(user_group: fff_schema.UserGroup, db: AsyncSession) -> list[int]:
+	users = await get_users_in_group(user_group, db)
+	return list(map(lambda u: u.id, users))
+
 
 # .d8888. d88888b  .d8b.  d8888b.  .o88b. db   db 
 # 88'  YP 88'     d8' `8b 88  `8D d8P  Y8 88   88 
@@ -58,9 +76,13 @@ async def get_user(user_email: str, db: AsyncSession) -> fff_model.User | None:
 # db   8D 88.     88   88 88 `88. Y8b  d8 88   88 
 # `8888Y' Y88888P YP   YP 88   YD  `Y88P' YP   YP 
 
-async def search_transactions(query: str, db: AsyncSession) -> list[fff_model.Transaction]:
+async def search_transactions(query: str, current_user_group: fff_schema.UserGroup, db: AsyncSession) -> list[fff_model.Transaction]:
+	u_ids = await get_user_ids_in_group(current_user_group, db)
+
+	clauses = [fff_model.Transaction.description.like(query), fff_model.Transaction.user_id.in_(u_ids)]
+	
 	result: Result = await db.execute(
-		select(fff_model.Transaction).filter(fff_model.Transaction.description.like(query))
+		select(fff_model.Transaction).filter(*clauses)
 	)
 	t_list = list(map(lambda x: x[0], result.fetchall()))
 	return t_list

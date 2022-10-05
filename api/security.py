@@ -67,3 +67,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         raise credentials_exception
     return user
 
+async def get_current_user_group(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> fff_schema.UserGroup:
+    user = await get_current_user(token, db)
+    return await fff_crud.get_user_group(user.user_group_id, db)

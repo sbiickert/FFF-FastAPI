@@ -24,7 +24,7 @@ async def get_root():
 	#return {"message": "Welcome to the FFF version 6"}
 
 @router.get("/heartbeat")
-async def get_heartbeat():
+async def get_heartbeat(current_user: fff_schema.UserOut = Depends(get_current_user)):
 	return {"message": "Welcome to the FFF version 6"}
 
 @router.get("/transactiontype/{id}", response_model=fff_schema.TransactionType)

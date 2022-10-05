@@ -5,7 +5,7 @@ import re
 import api.schemas as fff_schema
 import api.cruds.other as fff_crud
 from api.db import get_db
-from api.security import oauth2_scheme
+from api.security import get_current_user_group
 
 router = APIRouter()
 
@@ -15,9 +15,9 @@ router = APIRouter()
 # summary                      GET|HEAD   ANY      ANY    /summary/{y}/{m}/{_format}               
 
 @router.get("/search", response_model=list[fff_schema.TransactionOut])
-async def get_search(q: str, db: AsyncSession = Depends(get_db), token: str = Depends(oauth2_scheme)):
+async def get_search(q: str, db: AsyncSession = Depends(get_db), current_user_group: fff_schema.UserGroup = Depends(get_current_user_group)):
 	clean_q = re.sub("[^\w %]", "", q)
-	return await fff_crud.search_transactions(f"%{clean_q}%", db)
+	return await fff_crud.search_transactions(f"%{clean_q}%", current_user_group, db)
 
 @router.get("/balance/{year}/{month}/{day}")
 async def get_balance(year: int, month: int = -1, day: int = -1):
