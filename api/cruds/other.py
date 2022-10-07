@@ -1,6 +1,7 @@
+from unicodedata import category
 from unittest import result
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, extract, text
 from sqlalchemy.engine import Result
 from typing import Optional, Tuple
 
@@ -94,6 +95,43 @@ async def search_transactions(query: str, current_user_group: fff_schema.UserGro
 # db   8D 88b  d88 88  88  88 88  88  88 88   88 88 `88.    88    
 # `8888Y' ~Y8888P' YP  YP  YP YP  YP  YP YP   YP 88   YD    YP    
 
+async def get_summary_for_month(year: int, month: int,
+		current_user_group: fff_schema.UserGroup,
+		db: AsyncSession) -> list[fff_schema.Summary]:
+	u_ids = await get_user_ids_in_group(current_user_group, db)
+	u_ids_str = [str(id) for id in u_ids]
+
+	user_group_clause = f"user_id in ({','.join(u_ids_str)})"
+	sql = 't.transaction_type_id, tt.name, tt.category category, SUM(t.amount) amount'
+	sql += ' FROM TRANSACTION t, transaction_type tt'
+	sql += f' WHERE t.transaction_type_id = tt.id AND YEAR(t.transaction_date) = {year}'
+	if month > 0:
+		sql += f'  AND MONTH(t.transaction_date) = {month}'
+	sql += f' AND {user_group_clause}'
+	sql += ' GROUP BY t.transaction_type_id, category'
+
+	text_sql = text(sql)
+	result: Result = await db.execute(
+		select(text_sql)
+	)
+
+	summary = []
+	for row in result.fetchall():
+		s = fff_schema.Summary(tt=row[0], tt_name=row[1], category=row[2], amount=row[3], percent=0)
+		summary.append(s)
+
+	# Calculate percentages
+	sum_expense = sum(list(map(lambda s: s.amount, filter(lambda s: (s.category == 'EXPENSE'), summary))))
+	sum_income = sum(list(map(lambda s: s.amount, filter(lambda s: (s.category == 'INCOME'), summary))))
+
+	for s in summary:
+		if s.category == 'EXPENSE' and sum_expense > 0:
+			s.percent = s.amount / sum_expense
+		if s.category == 'INCOME' and sum_income > 0:
+			s.percent = s.amount / sum_income
+
+	return summary
+
 
 # d8888b.  .d8b.  db       .d8b.  d8b   db  .o88b. d88888b 
 # 88  `8D d8' `8b 88      d8' `8b 888o  88 d8P  Y8 88'     
@@ -101,5 +139,13 @@ async def search_transactions(query: str, current_user_group: fff_schema.UserGro
 # 88~~~b. 88~~~88 88      88~~~88 88 V8o88 8b      88~~~~~ 
 # 88   8D 88   88 88booo. 88   88 88  V888 Y8b  d8 88.     
 # Y8888P' YP   YP Y88888P YP   YP VP   V8P  `Y88P' Y88888P 
-                                                         
-                                                         
+
+async def get_balance_for_date(year: int, month: int, day: int,
+		current_user_group: fff_schema.UserGroup,
+		db: AsyncSession) -> fff_schema.BalanceReport:
+	pass
+
+async def get_balance_for_month(year: int, month: int,
+		current_user_group: fff_schema.UserGroup,
+		db: AsyncSession) -> fff_schema.BalanceReport:
+	pass

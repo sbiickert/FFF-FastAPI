@@ -86,3 +86,29 @@ class TransactionOut(TransactionIn):
 class TransactionsMessage(BaseModel):
 	message: str
 	tids: list[int]
+
+
+# BALANCE
+
+class Balance(BaseModel):
+	index: int
+	income: float
+	expense: float
+	diff: float
+
+class BalanceReport(BaseModel):
+	year: int
+	month: int
+	day: int
+	year_balance: Balance
+	month_balances: list[Balance]
+	day_balances: list[Balance]
+
+# SUMMARY
+
+class Summary(BaseModel):
+	tt: int
+	tt_name: str
+	amount: float
+	percent: float
+	category: TransactionTypeCategory
