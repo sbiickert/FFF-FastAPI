@@ -91,10 +91,12 @@ class TransactionsMessage(BaseModel):
 # BALANCE
 
 class Balance(BaseModel):
-	index: int
-	income: float
-	expense: float
-	diff: float
+	index: int = 0
+	income: float = 0
+	expense: float = 0
+	diff: float = 0
+	def calc_diff(self):
+		self.diff = self.income - self.expense
 
 class BalanceReport(BaseModel):
 	year: int

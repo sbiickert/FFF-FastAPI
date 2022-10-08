@@ -26,7 +26,11 @@ async def get_balance(year: int = Path(ge=2000, le=2070),
 					day: int = Path(le=31, default=-1), 
 					db: AsyncSession = Depends(get_db), 
 					current_user_group: fff_schema.UserGroup = Depends(get_current_user_group)):
-	pass
+	if month < 1:
+		return await fff_crud.get_balance_for_year(year, current_user_group, db)
+	if day < 1:
+		return await fff_crud.get_balance_for_month(year, month, current_user_group, db)
+	return await fff_crud.get_balance_for_date(year, month, day, current_user_group, db)
 
 @router.get("/summary/{year}/{month}")
 async def get_summary(year: int, month: int = -1,
