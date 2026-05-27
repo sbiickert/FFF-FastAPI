@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, ConfigDict
 from enum import Enum
 from uuid import UUID
 import datetime
@@ -15,13 +15,13 @@ class UserBase(BaseModel):
 class UserOut(UserBase):
 	id: int
 	class Config:
-		orm_mode = True
+		model_config = ConfigDict(from_attributes=True)
 
 class User(UserBase):
 	id: int
 	password: str
 	class Config:
-		orm_mode = True
+		model_config = ConfigDict(from_attributes=True)
 
 
 # USER GROUP
@@ -55,7 +55,7 @@ class TransactionType(BaseModel):
 	category: TransactionTypeCategory = Field(TransactionTypeCategory.expense)
 	symbol: str
 	class Config:
-		orm_mode = True
+		model_config = ConfigDict(from_attributes=True)
 
 
 # TRANSACTION 
@@ -81,7 +81,7 @@ class Transaction(TransactionBase):
 class TransactionOut(TransactionIn):
 	id: int
 	class Config:
-		orm_mode = True
+		model_config = ConfigDict(from_attributes=True)
 
 class TransactionsMessage(BaseModel):
 	message: str

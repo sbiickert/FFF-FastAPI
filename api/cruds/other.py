@@ -78,11 +78,19 @@ async def get_user_ids_in_group(user_group: fff_schema.UserGroup, db: AsyncSessi
 # db   8D 88.     88   88 88 `88. Y8b  d8 88   88 
 # `8888Y' Y88888P YP   YP 88   YD  `Y88P' YP   YP 
 
-async def search_transactions(query: str, current_user_group: fff_schema.UserGroup, db: AsyncSession) -> list[fff_model.Transaction]:
+async def search_transactions(query: str, start_date: Optional[str], end_date: Optional[str],
+							   current_user_group: fff_schema.UserGroup, 
+							   db: AsyncSession) -> list[fff_model.Transaction]:
 	u_ids = await get_user_ids_in_group(current_user_group, db)
 
-	clauses = [fff_model.Transaction.description.like(query), fff_model.Transaction.user_id.in_(u_ids)]
+	clauses = [fff_model.Transaction.description.like(query),
+			fff_model.Transaction.user_id.in_(u_ids)]
 	
+	if start_date is not None:
+		clauses.append(fff_model.Transaction.transaction_date >= start_date)
+	if end_date is not None:
+		clauses.append(fff_model.Transaction.transaction_date <= end_date)
+
 	result: Result = await db.execute(
 		select(fff_model.Transaction).filter(*clauses)
 	)
@@ -104,7 +112,7 @@ async def get_summary_for_month(year: int, month: int,
 	user_group_clause = build_user_group_clause(u_ids)
 
 	sql = 't.transaction_type_id, tt.name, tt.category category, SUM(t.amount) amount'
-	sql += ' FROM TRANSACTION t, transaction_type tt'
+	sql += ' FROM transaction t, transaction_type tt'
 	sql += f' WHERE t.transaction_type_id = tt.id AND YEAR(t.transaction_date) = {year}'
 	if month > 0:
 		sql += f'  AND MONTH(t.transaction_date) = {month}'

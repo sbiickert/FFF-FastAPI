@@ -1,5 +1,5 @@
 import importlib
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,8 +19,8 @@ router = APIRouter()
 # get_transaction_types        GET|HEAD   ANY      ANY    /transactiontypes/{category}.{_format}   
  
 @router.get("/")
-async def get_root():
-	return RedirectResponse('/docs')
+async def get_root(request: Request):
+	return RedirectResponse(request.scope.get('root_path', '') + '/docs')
 	#return {"message": "Welcome to the FFF version 6"}
 
 @router.get("/heartbeat")

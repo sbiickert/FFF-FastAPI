@@ -2,7 +2,6 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from datetime import datetime, timedelta
 
@@ -10,24 +9,20 @@ import api.schemas as fff_schema
 import api.cruds.other as fff_crud
 from api.db import get_db
 
-# from random.org
-SALT="B2jE2Lh9z1E7GQj7j5C1sb"
 # openssl rand -hex 32
 SECRET_KEY = "febeab36aaf79f36c2bf8ec33c7234a2105b98e14d3cc8197cacf1aa0aff1d03"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+import bcrypt
 
-def verify_password(plain_password, hashed_password) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password, salt=SALT)
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
 async def authenticate_user(email: str, password: str, db: AsyncSession = Depends(get_db)) -> fff_schema.UserOut | None:

@@ -37,7 +37,7 @@ async def get_transaction(id: int,
                                                                                                                                                                  
 @router.post("/transaction", response_model=fff_schema.TransactionOut, status_code=status.HTTP_201_CREATED)
 async def post_transaction(t_item: fff_schema.TransactionIn, 
-						current_user_group: fff_schema.UserGroup = Depends(get_current_user),
+						current_user: fff_schema.User = Depends(get_current_user),
 						db: AsyncSession = Depends(get_db)):
 	return await fff_crud.create_transaction(t_item, current_user, db)
 
@@ -69,7 +69,7 @@ async def delete_transaction(id: int,
 # YP  YP  YP ~Y8888P' Y88888P    YP    Y888888P         Y888P  Y88888P    YP    
 
 @router.get("/transactions", response_model=list[fff_schema.TransactionOut])
-async def get_transactions_with_ids(tids: str = Query(default="", regex="^[,\d]+$"), 
+async def get_transactions_with_ids(tids: str = Query(default="", pattern=r"^[,\d]+$"), 
 									current_user_group: fff_schema.UserGroup = Depends(get_current_user_group),
 									db: AsyncSession = Depends(get_db)):
 	id_list = list(map(int, filter(None, tids.split(","))))
@@ -81,20 +81,24 @@ async def get_transactions_in_series(series: UUID,
 						db: AsyncSession = Depends(get_db)):
 	return await fff_crud.get_transactions_in_series(series, db)
 
-@router.get("/transactions/{year}/{month}/{day}", response_model=list[fff_schema.TransactionOut])
-async def get_transactions_for(year: int = Path(ge=2000, le=2070),
-								month: int = Path(ge=1, le=12), 
-								day: int = Path(le=31, default=-1),
-								tt: int = -1,
-								c: fff_schema.TransactionTypeCategory = fff_schema.TransactionTypeCategory.all,
-								current_user_group: fff_schema.UserGroup = Depends(get_current_user_group),
-								db: AsyncSession = Depends(get_db)):
-	if day < 1:
-		# Between the first and last of the month
-		return await fff_crud.get_transactions_for_month(year, month, c, tt, current_user_group, db)
-	# else on a specific day
-	return await fff_crud.get_transactions_for_date(year, month, day, c, tt, current_user_group, db)
+@router.get("/transactions/{year}/{month}", response_model=list[fff_schema.TransactionOut])
+async def get_transactions_for_month(year: int = Path(ge=2000, le=2070),
+                        month: int = Path(ge=1, le=12),
+                        tt: int = -1,
+                        c: fff_schema.TransactionTypeCategory = fff_schema.TransactionTypeCategory.all,
+                        current_user_group: fff_schema.UserGroup = Depends(get_current_user_group),
+                        db: AsyncSession = Depends(get_db)):
+    return await fff_crud.get_transactions_for_month(year, month, c, tt, current_user_group, db)
 
+@router.get("/transactions/{year}/{month}/{day}", response_model=list[fff_schema.TransactionOut])
+async def get_transactions_for_day(year: int = Path(ge=2000, le=2070),
+                        month: int = Path(ge=1, le=12),
+                        day: int = Path(ge=1, le=31),
+                        tt: int = -1,
+                        c: fff_schema.TransactionTypeCategory = fff_schema.TransactionTypeCategory.all,
+                        current_user_group: fff_schema.UserGroup = Depends(get_current_user_group),
+                        db: AsyncSession = Depends(get_db)):
+    return await fff_crud.get_transactions_for_date(year, month, day, c, tt, current_user_group, db)
 
 # .88b  d88. db    db db      d888888b d888888b        d88888b d8888b. d888888b d888888b 
 # 88'YbdP`88 88    88 88      `~~88~~'   `88'          88'     88  `8D   `88'   `~~88~~' 
@@ -120,7 +124,7 @@ async def put_transactions(t_items: list[fff_schema.TransactionInWithID],
 	return await fff_crud.update_transactions(originals, t_items, current_user_group, db)
 
 @router.delete("/transactions",  response_model=fff_schema.TransactionsMessage)
-async def delete_transactions(tids: str = Query(default="", regex="^[,\d]+$"), 
+async def delete_transactions(tids: str = Query(default="", pattern=r"^[,\d]+$"), 
 						current_user_group: fff_schema.UserGroup = Depends(get_current_user_group), 
 						db: AsyncSession = Depends(get_db)):
 	id_list = list(map(int, filter(None, tids.split(","))))
