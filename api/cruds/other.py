@@ -32,9 +32,13 @@ async def get_transaction_type(id: int, db: AsyncSession) -> Optional[fff_model.
 	return t[0] if t is not None else None
 
 async def get_transaction_types(category: fff_schema.TransactionTypeCategory, db: AsyncSession) -> list[fff_model.TransactionType]:
-	result: Result = await db.execute(
-		select(fff_model.TransactionType).filter(fff_model.TransactionType.category == category)
-	)
+	if category == fff_schema.TransactionTypeCategory.all:
+		result: Result = await db.execute(
+			select(fff_model.TransactionType))
+	else:
+		result: Result = await db.execute(
+			select(fff_model.TransactionType).filter(fff_model.TransactionType.category == category)
+		)
 	tt_list = list(map(lambda x: x[0], result.fetchall()))
 	return tt_list
 

@@ -9,11 +9,6 @@ from api.security import get_current_user_group
 
 router = APIRouter()
 
-# FFF6 Symfony (php bin/console debug:router)
-# balance                      GET|HEAD   ANY      ANY    /balance/{y}/{m}/{d}/{_format}           
-# search                       GET|HEAD   ANY      ANY    /search/{_format}                        
-# summary                      GET|HEAD   ANY      ANY    /summary/{y}/{m}/{_format}               
-
 @router.get("/search", response_model=list[fff_schema.TransactionOut])
 async def get_search(q: str, start: str = None, end: str = None,
                     db: AsyncSession = Depends(get_db), 

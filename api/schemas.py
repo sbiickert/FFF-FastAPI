@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field, EmailStr, ConfigDict
+from pydantic import BaseModel, Field, EmailStr, ConfigDict, PlainSerializer
 from enum import Enum
 from uuid import UUID
+from typing import Annotated
+from decimal import Decimal
 import datetime
 
 # USER
@@ -92,9 +94,18 @@ class TransactionsMessage(BaseModel):
 
 class Balance(BaseModel):
 	index: int = 0
-	income: float = 0
-	expense: float = 0
-	diff: float = 0
+	income: Annotated[
+        Decimal, 
+        PlainSerializer(lambda x: float(x), return_type=float, when_used='json')
+    ] = 0
+	expense: Annotated[
+        Decimal, 
+        PlainSerializer(lambda x: float(x), return_type=float, when_used='json')
+    ] = 0
+	diff: Annotated[
+        Decimal, 
+        PlainSerializer(lambda x: float(x), return_type=float, when_used='json')
+    ] = 0
 	def calc_diff(self):
 		self.diff = self.income - self.expense
 

@@ -13,10 +13,6 @@ from api.security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_c
 
 router = APIRouter()
 
-# FFF6 Symfony (php bin/console debug:router)
-# get_root                     GET|HEAD   ANY      ANY    /                                        
-# app_heartbeat_get            GET|HEAD   ANY      ANY    /heartbeat                               
-# get_transaction_types        GET|HEAD   ANY      ANY    /transactiontypes/{category}.{_format}   
  
 @router.get("/")
 async def get_root(request: Request):

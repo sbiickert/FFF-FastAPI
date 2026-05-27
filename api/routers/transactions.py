@@ -108,7 +108,7 @@ async def get_transactions_for_day(year: int = Path(ge=2000, le=2070),
 # YP  YP  YP ~Y8888P' Y88888P    YP    Y888888P        Y88888P Y8888D' Y888888P    YP    
 
 @router.post("/transactions", response_model=list[fff_schema.TransactionOut], status_code=status.HTTP_201_CREATED)
-async def post_transactions(t_items: list[fff_schema.TransactionIn], 
+async def post_transactions(t_items: list[fff_schema.TransactionIn],
 						current_user: fff_schema.User = Depends(get_current_user), 
 						db: AsyncSession = Depends(get_db)):
 	return await fff_crud.create_transactions(t_items, current_user, db)
