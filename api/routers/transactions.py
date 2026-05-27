@@ -48,7 +48,7 @@ async def put_transaction(id: int, t_item: fff_schema.TransactionIn,
 	t = await fff_crud.get_transaction(id, current_user_group, db)
 	if t is None:
 		raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{id} is not a valid transaction id")
-	return await fff_crud.update_transaction(original=t, updated_t=t_item, current_user_group=current_user_group, db=db)
+	return await fff_crud.update_transaction(original=t, updated_t=t_item, db=db)
 
 @router.delete("/transaction/{id}", response_model=fff_schema.TransactionsMessage)
 async def delete_transaction(id: int, 
@@ -79,7 +79,7 @@ async def get_transactions_with_ids(tids: str = Query(default="", pattern=r"^[,\
 async def get_transactions_in_series(series: UUID, 
 						current_user_group: fff_schema.UserGroup = Depends(get_current_user_group), 
 						db: AsyncSession = Depends(get_db)):
-	return await fff_crud.get_transactions_in_series(series, db)
+	return await fff_crud.get_transactions_in_series(str(series), current_user_group, db)
 
 @router.get("/transactions/{year}/{month}", response_model=list[fff_schema.TransactionOut])
 async def get_transactions_for_month(year: int = Path(ge=2000, le=2070),
@@ -121,7 +121,7 @@ async def put_transactions(t_items: list[fff_schema.TransactionInWithID],
 	for t_item in t_items:
 		t_ids.append(t_item.id)
 	originals = await fff_crud.get_transactions(t_ids, current_user_group, db)
-	return await fff_crud.update_transactions(originals, t_items, current_user_group, db)
+	return await fff_crud.update_transactions(originals, t_items, db)
 
 @router.delete("/transactions",  response_model=fff_schema.TransactionsMessage)
 async def delete_transactions(tids: str = Query(default="", pattern=r"^[,\d]+$"), 
@@ -129,5 +129,5 @@ async def delete_transactions(tids: str = Query(default="", pattern=r"^[,\d]+$")
 						db: AsyncSession = Depends(get_db)):
 	id_list = list(map(int, filter(None, tids.split(","))))
 	transactions = await fff_crud.get_transactions(id_list, current_user_group, db)
-	deleted_ids = await fff_crud.delete_transactions(originals=transactions, current_user_group=current_user_group, db=db)
+	deleted_ids = await fff_crud.delete_transactions(originals=transactions, db=db)
 	return fff_schema.TransactionsMessage(message="Deleted transactions", tids=deleted_ids)

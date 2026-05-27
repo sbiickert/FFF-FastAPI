@@ -106,7 +106,7 @@ async def get_transactions_for_month(year: int, month: int, c: fff_schema.Transa
                                   
                                   
 async def create_transaction(t: fff_schema.TransactionIn, current_user: fff_schema.User, db: AsyncSession) -> fff_model.Transaction:
-	transaction = fff_model.Transaction(**t.dict())
+	transaction = fff_model.Transaction(**t.model_dump())
 	transaction.user_id = current_user.id
 	db.add(transaction)
 	await db.commit()
@@ -126,7 +126,8 @@ async def update_transaction(original: fff_model.Transaction,
 	await db.refresh(original)
 	return original
 
-async def delete_transaction(original: fff_model.Transaction, db: AsyncSession) -> None:
+async def delete_transaction(original: fff_model.Transaction, 
+							db: AsyncSession) -> None:
 	await db.delete(original)
 	await db.commit()
 
@@ -140,7 +141,7 @@ async def delete_transaction(original: fff_model.Transaction, db: AsyncSession) 
 # YP  YP  YP ~Y8888P' Y88888P    YP    Y888888P        Y88888P Y8888D' Y888888P    YP    
 
 async def create_transactions(t_list: list[fff_schema.TransactionIn], current_user: fff_schema.User, db: AsyncSession) -> List[fff_model.Transaction]:
-	transactions = list(map(lambda t: fff_model.Transaction(**t.dict()), t_list))
+	transactions = list(map(lambda t: fff_model.Transaction(**t.model_dump()), t_list))
 	for transaction in transactions:
 		transaction.user_id = current_user.id
 
@@ -152,8 +153,8 @@ async def create_transactions(t_list: list[fff_schema.TransactionIn], current_us
 	return transactions
 
 async def update_transactions(originals: list[fff_model.Transaction],
-							 updated: list[fff_schema.TransactionInWithID], 
-							 db: AsyncSession) -> List[fff_model.Transaction]:
+							updated: list[fff_schema.TransactionInWithID], 
+							db: AsyncSession) -> List[fff_model.Transaction]:
 	for original, updated_t in zip(originals, updated):
 		original.amount = updated_t.amount
 		original.description = updated_t.description

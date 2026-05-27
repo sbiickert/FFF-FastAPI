@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, EmailStr, ConfigDict, PlainSerializer
 from enum import Enum
 from uuid import UUID
-from typing import Annotated
+from typing import Annotated, Optional
 from decimal import Decimal
 import datetime
 
@@ -41,7 +41,7 @@ class Token(BaseModel):
 	token_type: str
 
 class TokenData(BaseModel):
-	username: str | None = None
+	username: Optional[str] = None
 
 # TRANSACTION TYPE
 
@@ -64,12 +64,11 @@ class TransactionType(BaseModel):
 
 class TransactionBase(BaseModel):
 	amount: float
-	description: str | None
+	description: Optional[str] = None
 	transaction_date: datetime.date
-	series: UUID | None
+	series: Optional[UUID] = None
 
 class TransactionIn(TransactionBase):
-	user_id: int
 	transaction_type_id: int
 
 class TransactionInWithID(TransactionIn):
@@ -82,6 +81,7 @@ class Transaction(TransactionBase):
 
 class TransactionOut(TransactionIn):
 	id: int
+	user_id: int
 	class Config:
 		model_config = ConfigDict(from_attributes=True)
 
