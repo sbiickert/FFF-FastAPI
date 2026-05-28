@@ -6,6 +6,7 @@ import api.schemas as fff_schema
 import api.cruds.other as fff_crud
 from api.db import get_db
 from api.security import get_current_user_group
+from urllib.parse import unquote
 
 router = APIRouter()
 
@@ -13,7 +14,7 @@ router = APIRouter()
 async def get_search(q: str, start: str = None, end: str = None,
                     db: AsyncSession = Depends(get_db), 
 					current_user_group: fff_schema.UserGroup = Depends(get_current_user_group)):
-	clean_q = re.sub(r"[^\w %]", "", q)
+	clean_q = re.sub(r"[^\w %]", "", unquote(q))
 	return await fff_crud.search_transactions(f"%{clean_q}%", start, end, current_user_group, db)
 
 @router.get("/balance/{year}")

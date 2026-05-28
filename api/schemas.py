@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, EmailStr, ConfigDict, PlainSerializer
+from pydantic import BaseModel, Field, EmailStr, ConfigDict, PlainSerializer, field_validator
 from enum import Enum
 from uuid import UUID
 from typing import Annotated, Optional
@@ -67,6 +67,13 @@ class TransactionBase(BaseModel):
 	description: Optional[str] = None
 	transaction_date: datetime.date
 	series: Optional[UUID] = None
+
+	@field_validator('series', mode='before')
+	@classmethod
+	def empty_string_to_none(cls, v):
+		if v == '':
+			return None
+		return v
 
 class TransactionIn(TransactionBase):
 	transaction_type_id: int
