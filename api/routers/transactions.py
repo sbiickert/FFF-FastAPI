@@ -57,7 +57,7 @@ async def delete_transaction(id: int,
 	t = await fff_crud.get_transaction(id, current_user_group, db)
 	if t is None:
 		raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"{id} is not a valid transaction id")
-	await fff_crud.delete_transaction(original=t, current_user_group=current_user_group, db=db)
+	await fff_crud.delete_transaction(original=t, db=db)
 	return fff_schema.TransactionsMessage(message="Deleted transaction", tids=[id])
 
 
