@@ -2,7 +2,7 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
-
+import os
 from datetime import datetime, timedelta
 
 import api.schemas as fff_schema
@@ -12,7 +12,8 @@ from api.db import get_db
 # openssl rand -hex 32
 SECRET_KEY = "febeab36aaf79f36c2bf8ec33c7234a2105b98e14d3cc8197cacf1aa0aff1d03"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+#ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
