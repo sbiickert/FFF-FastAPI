@@ -9,7 +9,7 @@ from datetime import timedelta
 import api.schemas as fff_schema
 import api.cruds.other as fff_crud
 from api.db import get_db
-from api.security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_user, authenticate_user, get_password_hash
+from api.security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, get_current_user, authenticate_user, get_password_hash, verify_password
 
 router = APIRouter()
 
@@ -52,6 +52,17 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
 		data={"sub": user.email}, expires_delta=access_token_expires
 	)
 	return {"access_token": access_token, "token_type": "bearer"}
+
+@router.put("/users/me/password", status_code=status.HTTP_204_NO_CONTENT)
+async def change_password(
+	payload: fff_schema.PasswordChange,
+	current_user: fff_schema.UserOut = Depends(get_current_user),
+	db: AsyncSession = Depends(get_db),
+):
+	db_user = await fff_crud.get_user(current_user.email, db)
+	if not verify_password(payload.current_password, db_user.password):
+		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Current password is incorrect")
+	await fff_crud.update_user_password(current_user.id, get_password_hash(payload.new_password), db)
 
 @router.get("/hasher")
 async def hash_string(input: str) -> str:

@@ -63,6 +63,18 @@ async def get_user_group(user_group_id: int, db: AsyncSession) -> fff_model.User
 	t: Optional[Tuple[fff_model.UserGroup]] = result.fetchone()
 	return t[0] if t is not None else None
 
+async def update_user_password(user_id: int, new_hashed_password: str, db: AsyncSession) -> None:
+	result: Result = await db.execute(
+		select(fff_model.User).filter(fff_model.User.id == user_id)
+	)
+	t: Optional[Tuple[fff_model.User]] = result.fetchone()
+	if t is None:
+		return
+	user = t[0]
+	user.password = new_hashed_password
+	db.add(user)
+	await db.commit()
+
 async def get_users_in_group(user_group: fff_schema.UserGroup, db: AsyncSession) -> list[fff_model.User]:
 	result: Result = await db.execute(
 		select(fff_model.User).filter(fff_model.User.user_group_id == user_group.id)

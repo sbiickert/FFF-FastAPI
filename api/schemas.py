@@ -34,6 +34,21 @@ class UserGroup(BaseModel):
 	users: list[User]
 
 
+# PASSWORD CHANGE
+
+class PasswordChange(BaseModel):
+	current_password: str
+	new_password: str
+	confirm_new_password: str
+
+	@field_validator("confirm_new_password")
+	@classmethod
+	def passwords_match(cls, v, info):
+		if "new_password" in info.data and v != info.data["new_password"]:
+			raise ValueError("new_password and confirm_new_password do not match")
+		return v
+
+
 # TOKEN
 
 class Token(BaseModel):
